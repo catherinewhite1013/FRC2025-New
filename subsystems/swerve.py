@@ -7,6 +7,7 @@ from wpimath.estimator import SwerveDrive4PoseEstimator
 from wpimath.geometry import Rotation2d, Pose2d, Transform2d
 from wpimath.kinematics import SwerveModuleState, SwerveDrive4Kinematics
 from wpimath.kinematics import ChassisSpeeds
+from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
 from wpimath.units import inchesToMeters, degreesToRadians
 from ntcore import NetworkTableInstance
 from navx import AHRS
@@ -21,10 +22,11 @@ from phoenix6.configs.config_groups import InvertedValue, NeutralModeValue
 from phoenix6.controls import StaticBrake, VelocityVoltage, PositionDutyCycle
 from phoenix6.hardware import CANcoder, TalonFX
 from phoenix6.signals import FeedbackSensorSourceValue
-from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
+
 
 class Swerve(commands2.Subsystem):
   def __init__(self):
+    #   --- whoami ---
     self.frontLeft = SwerveModule(
       DriveConstants.kFrontLeftDriveMotorId,
       DriveConstants.kFrontLeftSteerMotorId,
@@ -52,24 +54,23 @@ class Swerve(commands2.Subsystem):
       DriveConstants.kBackRightShaftEncoderId,
       DriveConstants.kBackRightShaftEncoderOffset
     )
-
-    self.modules = [self.frontLeft, self.frontRight, self.backLeft, self.backRight]
+    # --- gyro, angle, communication ---    self.modules = [self.frontLeft, self.frontRight, self.backLeft, self.backRight]
     self.gyro = AHRS(AHRS.NavXComType.kMXP_SPI)
     self.gyro.enableBoardlevelYawReset(True)
 
     self.desiredHeading = float(0)
     self.headingPIDController = PIDController(DriveConstants.kPHeading, 0, 0)
-    self.headingPIDController.enableContinuousInput(-math.pi, math.pi)
+    self.headingPIDController.enableContinuousInput(-math.pi, math.pi)   #讓角度連續（-179，179差2度，不是358度）
 
     self.poseEstimator = SwerveDrive4PoseEstimator(
       DriveConstants.kDriveKinematics,
-      self.getRawRotation2d(),
+      self.getRawRotation2d(),   #gyro read
       self.getModulePositions(),
       Pose2d(),
-      (0.05, 0.05, degreesToRadians(5)),
-      (0.02, 0.02, degreesToRadians(2))
+      (0.05, 0.05, degreesToRadians(5)),  #IMU 誤差
+      (0.02, 0.02, degreesToRadians(2))   #Vision 誤差
     )
-
+    #--- 不同板子溝通 ---
     nt = NetworkTableInstance.getDefault()
     self.statePublisher = nt.getStructArrayTopic("/SwerveStates", SwerveModuleState).publish()
     self.posePublisher  = nt.getStructTopic("/SwervePose", Pose2d).publish()
