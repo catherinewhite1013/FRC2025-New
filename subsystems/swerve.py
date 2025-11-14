@@ -13,7 +13,7 @@ from ntcore import NetworkTableInstance
 from navx import AHRS
 # from swervemodule import SwerveModule
 from constants import DriveConstants
-#from questnav.questnav2 import QuestNav
+from questnav.questnav2 import QuestNav
 from constants import ModuleConstants, DriveConstants
 from phoenix6 import BaseStatusSignal
 from phoenix6.configs import CANcoderConfiguration, TalonFXConfiguration
@@ -54,7 +54,8 @@ class Swerve(commands2.Subsystem):
       DriveConstants.kBackRightShaftEncoderId,
       DriveConstants.kBackRightShaftEncoderOffset
     )
-    # --- gyro, angle, communication ---    self.modules = [self.frontLeft, self.frontRight, self.backLeft, self.backRight]
+    # --- gyro, angle, communication ---    
+    self.modules = [self.frontLeft, self.frontRight, self.backLeft, self.backRight]
     self.gyro = AHRS(AHRS.NavXComType.kMXP_SPI)
     self.gyro.enableBoardlevelYawReset(True)
 
@@ -74,11 +75,11 @@ class Swerve(commands2.Subsystem):
     nt = NetworkTableInstance.getDefault()
     self.statePublisher = nt.getStructArrayTopic("/SwerveStates", SwerveModuleState).publish()
     self.posePublisher  = nt.getStructTopic("/SwervePose", Pose2d).publish()
-    '''
+    
     self.questnav = QuestNav()
     self.quest_to_robot = Transform2d(-0.22, 0, Rotation2d().fromDegrees(180))
     self.questnav.set_pose(Pose2d().transformBy(self.quest_to_robot.inverse()))
-    '''
+    
   def zeroHeading(self, fieldRotation: Rotation2d):
     self.gyro.setAngleAdjustment(-fieldRotation.degrees() - self.gyro.getYaw())
     self.desiredHeading = self.getRotation2d().radians()
@@ -91,7 +92,7 @@ class Swerve(commands2.Subsystem):
   
   def resetPose(self, pose: Pose2d):
     self.poseEstimator.resetPose(pose)
-    #self.questnav.set_pose(pose.transformBy(self.quest_to_robot.inverse()))
+    self.questnav.set_pose(pose.transformBy(self.quest_to_robot.inverse()))
 
   def getPose(self):
     return self.poseEstimator.getEstimatedPosition()
@@ -136,12 +137,12 @@ class Swerve(commands2.Subsystem):
     SmartDashboard.putNumber("Heading", self.getRotation2d().degrees())
     #SmartDashboard.putBoolean("QUEST_CONNECTED", self.questnav.is_connected())
     #SmartDashboard.putBoolean("QUEST_TRACKING", self.questnav.is_tracking())
-    '''
+    
     self.questnav.command_periodic()
     if(self.questnav.is_tracking()):
       quest_pose = self.questnav.get_pose().transformBy(self.quest_to_robot)
       self.poseEstimator.addVisionMeasurement(quest_pose, self.questnav.get_data_timestamp())
-    '''
+
 
 class SwerveModule:
   def __init__(
