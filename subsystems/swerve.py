@@ -7,7 +7,7 @@ from wpimath.estimator import SwerveDrive4PoseEstimator
 from wpimath.geometry import Rotation2d, Pose2d, Transform2d
 from wpimath.kinematics import SwerveModuleState, SwerveDrive4Kinematics
 from wpimath.kinematics import ChassisSpeeds
-from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
+from wpimath.kinematics import SwerveModulePosition
 from wpimath.units import inchesToMeters, degreesToRadians
 from ntcore import NetworkTableInstance
 from navx import AHRS
@@ -81,21 +81,21 @@ class Swerve(commands2.Subsystem):
     self.questnav.set_pose(Pose2d().transformBy(self.quest_to_robot.inverse()))
     
   def zeroHeading(self, fieldRotation: Rotation2d):
-    self.gyro.setAngleAdjustment(-fieldRotation.degrees() - self.gyro.getYaw())
-    self.desiredHeading = self.getRotation2d().radians()
+    self.gyro.setAngleAdjustment(-fieldRotation.degrees() - self.gyro.getYaw())   # current angle = field angle
+    self.desiredHeading = self.getRotation2d().radians()   # heading maintain
   
   def getRawRotation2d(self):
-    return Rotation2d.fromDegrees(-self.gyro.getYaw())
+    return Rotation2d.fromDegrees(-self.gyro.getYaw())   # return current Heading(raw)
 
   def getRotation2d(self):
-    return self.gyro.getRotation2d()
+    return self.gyro.getRotation2d()   # return filtered current Heading 
   
   def resetPose(self, pose: Pose2d):
     self.poseEstimator.resetPose(pose)
     self.questnav.set_pose(pose.transformBy(self.quest_to_robot.inverse()))
 
   def getPose(self):
-    return self.poseEstimator.getEstimatedPosition()
+    return self.poseEstimator.getEstimatedPosition()   # 確保基準點一致
 
   def getModulePositions(self):
     return tuple(m.getModulePosition() for m in self.modules)
@@ -105,22 +105,22 @@ class Swerve(commands2.Subsystem):
   
   def setModuleStates(self, desiredState: Iterable[SwerveModuleState]):
     desiredState = SwerveDrive4Kinematics.desaturateWheelSpeeds(
-      desiredState, DriveConstants.kPhysicalMaxSpeedMetersPerSecond
+      desiredState, DriveConstants.kPhysicalMaxSpeedMetersPerSecond   # limit max motor output
     )
     for i in range(4):
       self.modules[i].setDesiredState(desiredState[i])
 
   def getChassisSpeeds(self):
-    return DriveConstants.kDriveKinematics.toChassisSpeeds(self.getModuleStates())
+    return DriveConstants.kDriveKinematics.toChassisSpeeds(self.getModuleStates())   # return Vx,Vy,heading
 
   def driveRobotRelative(self, chassisSpeeds: ChassisSpeeds):
-    differ = lambda a, b: abs((a - b + math.pi) % math.tau - math.pi)
+    differ = lambda a, b: abs((a - b + math.pi) % math.tau - math.pi)   # calculate min angle difference 
     currentHeading = self.getRotation2d().radians()
     if (abs(chassisSpeeds.omega) > DriveConstants.kDeadband
         or differ(self.desiredHeading, currentHeading) > math.pi / 4
     ):
       self.desiredHeading = currentHeading
-    elif (chassisSpeeds.vx**2 + chassisSpeeds.vy**2)**0.5 > DriveConstants.kDeadband:
+    elif (chassisSpeeds.vx**2 + chassisSpeeds.vy**2)**0.5 > DriveConstants.kDeadband:   # turn[y/n]:
       chassisSpeeds.omega = self.headingPIDController.calculate(currentHeading, self.desiredHeading)
 
     moduleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds)
