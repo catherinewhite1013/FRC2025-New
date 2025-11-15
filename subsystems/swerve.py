@@ -105,7 +105,7 @@ class Swerve(commands2.Subsystem):
   
   def setModuleStates(self, desiredState: Iterable[SwerveModuleState]):
     desiredState = SwerveDrive4Kinematics.desaturateWheelSpeeds(
-      desiredState, DriveConstants.kPhysicalMaxSpeedMetersPerSecond   # limit max motor output
+      tuple(desiredState), DriveConstants.kPhysicalMaxSpeedMetersPerSecond   # limit max motor output
     )
     for i in range(4):
       self.modules[i].setDesiredState(desiredState[i])
@@ -179,7 +179,7 @@ class SwerveModule:
   def configureBaseParam(self):
     cfg_drive = TalonFXConfiguration()
     cfg_drive.motor_output.inverted = InvertedValue.COUNTER_CLOCKWISE_POSITIVE
-    cfg_drive.feedback.sensor_to_mechanism_ratio = 1 / ModuleConstants.kDriveEncoderRot2Meter
+    cfg_drive.feedback.sensor_to_mechanism_ratio = 1 / ModuleConstants.kDriveEncoderRotToMeter
     cfg_drive.slot0.k_p = ModuleConstants.kPDriveMotor
     cfg_drive.slot0.k_s = ModuleConstants.kSDriveMotor
     cfg_drive.slot0.k_v = ModuleConstants.kVDriveMotor

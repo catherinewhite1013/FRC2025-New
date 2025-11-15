@@ -11,12 +11,12 @@ class ModuleConstants:
   kCANbus = CANBus("canivore")
   kWheelDiameterMeters = 0.097
   kDriveMotorGearRatio = 1 / 6.75
-  kDriveEncoderRot2Meter = kDriveMotorGearRatio * math.pi * kWheelDiameterMeters
+  kDriveEncoderRotToMeter = kDriveMotorGearRatio * math.pi * kWheelDiameterMeters   #talon Fx build in encoder(drive)
   kDriveMotorMaxRPM = 6380
   kDriveMotorNominalVoltage = 12
   kPDriveMotor = 0.95
   kSDriveMotor = 0.06
-  kVDriveMotor = kDriveMotorNominalVoltage * 60 / kDriveEncoderRot2Meter / kDriveMotorMaxRPM
+  kVDriveMotor = kDriveMotorNominalVoltage * 60 / kDriveEncoderRotToMeter / kDriveMotorMaxRPM
   kPSteerMotor = 0.7
 
 class DriveConstants:
@@ -39,6 +39,7 @@ class DriveConstants:
   kTeleDriveMaxAccelerationUnitsPerSecond = 3.0
   kTeleDriveMaxAngularAccelerationUnitsPerSecond = 3.0
 
+  # whoami
   kFrontLeftDriveMotorId = 0
   kFrontLeftSteerMotorId = 1
   kFrontLeftShaftEncoderId = 10
