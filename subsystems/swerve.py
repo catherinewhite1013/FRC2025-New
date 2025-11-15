@@ -135,8 +135,8 @@ class Swerve(commands2.Subsystem):
     self.posePublisher.set(self.getPose())
     self.poseEstimator.update(self.getRawRotation2d(), self.getModulePositions())
     SmartDashboard.putNumber("Heading", self.getRotation2d().degrees())
-    #SmartDashboard.putBoolean("QUEST_CONNECTED", self.questnav.is_connected())
-    #SmartDashboard.putBoolean("QUEST_TRACKING", self.questnav.is_tracking())
+    SmartDashboard.putBoolean("QUEST_CONNECTED", self.questnav.is_connected())
+    SmartDashboard.putBoolean("QUEST_TRACKING", self.questnav.is_tracking())
     
     self.questnav.command_periodic()
     if(self.questnav.is_tracking()):
